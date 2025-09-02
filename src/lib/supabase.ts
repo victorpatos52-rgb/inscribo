@@ -3,16 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Debug environment 
-console.log('Subbase URL:', supabaseUrl);
-console.log('Supabase Key exists:', !! supabaseAnonKey);
+// Debug environment variables
+console.log('Supabase URL:', supabaseUrl);
+console.log('Supabase Key exists:', !!supabaseAnonKey);
 
 // Create client even without proper env vars for demo purposes
 export const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-console.log('supabase cliente criado:', !!supabase)
+console.log('Supabase client created:', !!supabase);
 
 // Check if we have proper Supabase configuration
 export const hasSupabaseConfig = !!(
