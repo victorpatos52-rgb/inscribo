@@ -262,7 +262,8 @@ BEGIN
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuário'),
-        'user'
+        'user',
+        '00000000-0000-0000-0000-000000000001'
     );
     RETURN NEW;
 END;
