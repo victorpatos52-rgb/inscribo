@@ -87,14 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Tentando fazer login com:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) throw error;
+      console.log('Resultado do login:', { data, error });
+      if (error) {
+        console.error('Erro específico:', error.message, error.status);
+        throw error;
+      }
     } catch (error) {
       console.error('Supabase auth error:', error);
-      throw new Error('Erro ao fazer login. Verifique suas credenciais ou crie uma conta.');
+      throw new Error(`Erro ao fazer login: ${error.message}`);
     }
   };
 
