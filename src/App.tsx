@@ -32,44 +32,13 @@ function App() {
     return <LoginForm />;
   }
 
-  // Demo mode when no Supabase config
-  if (!hasSupabaseConfig) {
-    const mockProfile = {
-      id: 'demo-user',
-      full_name: 'Usuário Demo',
-      email: 'demo@inscribo.com',
-      role: 'admin' as const,
-      institution_id: 'demo-institution',
-      avatar_url: null,
-    };
-
-    return (
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar 
-          currentPage={currentPage} 
-          onPageChange={setCurrentPage}
-          profile={mockProfile}
-          onSignOut={() => window.location.reload()}
-        />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title={getPageTitle(currentPage)} subtitle={getPageSubtitle(currentPage)} />
-          
-          <main className="flex-1 overflow-y-auto">
-            {renderCurrentPage(currentPage, setCurrentPage, mockProfile)}
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  // Authenticated user - ensure profile has admin role for demo
+  // Authenticated user
   const currentProfile = profile || {
-    id: user?.id || 'demo-user',
-    full_name: user?.user_metadata?.full_name || 'Usuário Demo',
-    email: user?.email || 'demo@inscribo.com',
-    role: 'admin' as const,
-    institution_id: 'demo-institution',
+    id: user?.id || 'user',
+    full_name: user?.user_metadata?.full_name || 'Usuário',
+    email: user?.email || 'user@email.com',
+    role: 'user' as const,
+    institution_id: null,
     avatar_url: null,
   };
 
@@ -79,7 +48,7 @@ function App() {
         currentPage={currentPage} 
         onPageChange={setCurrentPage}
         profile={currentProfile}
-        onSignOut={() => {}}
+        onSignOut={signOut}
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">

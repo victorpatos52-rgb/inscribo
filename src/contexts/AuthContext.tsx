@@ -77,35 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    // In demo mode, simulate successful login
-    if (!hasSupabaseConfig) {
-      // Simulate a successful login with demo user
-      setUser({
-        id: 'demo-user',
-        email: email,
-        user_metadata: { full_name: 'Admin Demo' },
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-      } as any);
-      
-      // Set demo profile
-      setProfile({
-        id: 'demo-user',
-        email: email,
-        full_name: 'Admin Demo',
-        role: 'admin',
-        institution_id: 'demo-institution',
-        avatar_url: null,
-      });
-      return;
-    }
-
     try {
-      if (!supabase) {
-        throw new Error('Supabase não configurado');
-      }
-      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -113,21 +85,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
     } catch (error) {
       console.error('Supabase auth error:', error);
-      throw new Error('Erro ao fazer login. Verifique suas credenciais.');
+      throw new Error('Erro ao fazer login. Verifique suas credenciais ou crie uma conta.');
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      if (!hasSupabaseConfig) {
-        // In demo mode, simulate successful signup
-        return;
-      }
-
-      if (!supabase) {
-        throw new Error('Supabase não configurado');
-      }
-
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -145,13 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    // In demo mode, just clear user state
-    if (!hasSupabaseConfig) {
-      setUser(null);
-      setProfile(null);
-      return;
-    }
-
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -164,11 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    // In demo mode, simulate password reset
-    if (!hasSupabaseConfig) {
-      return;
-    }
-
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
