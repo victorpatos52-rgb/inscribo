@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* React Big Calendar Custom Styles */
+.rbc-calendar {
+  color: inherit;
+}
+
+.dark .rbc-calendar {
+  background-color: transparent;
+}
+
+.rbc-month-view,
+.rbc-time-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dark .rbc-month-view,
+.dark .rbc-time-view {
+  border-color: #374151;
+}
+
+.rbc-header {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 8px;
+  font-weight: 600;
+}
+
+.dark .rbc-header {
+  background-color: #374151;
+  border-bottom-color: #4b5563;
+  color: #f9fafb;
+}
+
+.rbc-date-cell {
+  padding: 8px;
+}
+
+.rbc-today {
+  background-color: #eff6ff;
+}
+
+.dark .rbc-today {
+  background-color: #1e3a8a20;
+}
+
+.rbc-off-range-bg {
+  background-color: #f9fafb;
+}
+
+.dark .rbc-off-range-bg {
+  background-color: #1f2937;
+}
+
+.rbc-event {
+  border-radius: 6px;
+  border: none;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rbc-event:hover {
+  opacity: 0.8;
+}
+
+.rbc-toolbar {
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rbc-toolbar button {
+  background-color: #6366f1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #4f46e5;
+  transform: translateY(-1px);
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #4338ca;
+}
+
+.dark .rbc-toolbar button {
+  background-color: #4f46e5;
+}
+
+.dark .rbc-toolbar button:hover {
+  background-color: #4338ca;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
