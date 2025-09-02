@@ -4,13 +4,10 @@ import { useAuth } from '../../contexts/AuthContext';
 
 export function LoginForm() {
   const { signIn, signUp, resetPassword } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    fullName: '',
-    confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,16 +20,7 @@ export function LoginForm() {
     setMessage('');
 
     try {
-      if (isLogin) {
-        await signIn(formData.email, formData.password);
-      } else {
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('As senhas não coincidem');
-        }
-        await signUp(formData.email, formData.password, formData.fullName);
-        setMessage('Conta criada com sucesso! Faça login para continuar.');
-        setIsLogin(true);
-      }
+      await signIn(formData.email, formData.password);
     } catch (err: any) {
       setError(err.message || 'Erro ao processar solicitação');
     } finally {
@@ -87,32 +75,6 @@ export function LoginForm() {
             </p>
           </div>
 
-          {/* Toggle Login/Register */}
-          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${
-                isLogin
-                  ? 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400'
-              }`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${
-                !isLogin
-                  ? 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400'
-              }`}
-            >
-              Cadastrar
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
@@ -126,22 +88,6 @@ export function LoginForm() {
               </div>
             )}
 
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Nome Completo
-                </label>
-                <input
-                  type="text"
-                  value={formData.fullName}
-                  onChange={(e) => handleChange('fullName', e.target.value)}
-                  required={!isLogin}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all placeholder-gray-400"
-                  placeholder="Seu nome completo"
-                />
-              </div>
-            )}
-
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 E-mail
@@ -152,7 +98,7 @@ export function LoginForm() {
                 onChange={(e) => handleChange('email', e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all placeholder-gray-400"
-                placeholder="seu@email.com"
+                placeholder="admin@inscribo.com"
               />
             </div>
 
@@ -183,22 +129,6 @@ export function LoginForm() {
               </div>
             </div>
 
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Confirmar Senha
-                </label>
-                <input
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                  required={!isLogin}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all placeholder-gray-400"
-                  placeholder="••••••••"
-                />
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -207,32 +137,30 @@ export function LoginForm() {
               {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  {isLogin ? 'Entrando...' : 'Cadastrando...'}
+                  Entrando...
                 </div>
               ) : (
-                isLogin ? 'Entrar' : 'Criar Conta'
+                'Entrar'
               )}
             </button>
 
-            {isLogin && (
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-semibold"
-                >
-                  Esqueceu sua senha?
-                </button>
-              </div>
-            )}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-semibold"
+              >
+                Esqueceu sua senha?
+              </button>
+            </div>
           </form>
 
-          {/* Demo Mode Notice */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+          {/* Login Credentials */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
             <p className="text-sm text-green-700 dark:text-green-300 text-center">
-              <strong>🎯 Banco Real Conectado!</strong><br/>
-              <span className="text-xs">Crie sua conta clicando em <strong>"Cadastrar"</strong></span><br/>
-              <span className="text-xs opacity-75">Seus dados serão salvos no banco Supabase</span>
+              <strong>🔑 Credenciais de Acesso</strong><br/>
+              <span className="text-xs"><strong>E-mail:</strong> admin@inscribo.com</span><br/>
+              <span className="text-xs"><strong>Senha:</strong> admin123</span>
             </p>
           </div>
         </div>
