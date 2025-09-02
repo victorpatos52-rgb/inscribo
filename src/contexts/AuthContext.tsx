@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // If no Supabase config, set demo mode
-    if (!hasSupabaseConfig) {
+    if (!hasSupabaseConfig || !supabase) {
       setLoading(false);
       return;
     }
@@ -60,6 +60,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -77,6 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      throw new Error('Configuração do Supabase não encontrada.');
+    }
+    
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -90,6 +99,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    if (!supabase) {
+      throw new Error('Configuração do Supabase não encontrada.');
+    }
+    
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -108,6 +121,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      setUser(null);
+      setProfile(null);
+      return;
+    }
+    
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -120,6 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      throw new Error('Configuração do Supabase não encontrada.');
+    }
+    
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
