@@ -33,9 +33,12 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### 4️⃣ **Executar Migração do Banco**
 1. No painel do Supabase, vá em **SQL Editor**
 2. Clique em "New query"
-3. Cole todo o conteúdo do arquivo `supabase/migrations/create_initial_schema.sql`
+3. Primeiro, cole todo o conteúdo do arquivo `supabase/migrations/create_initial_schema_safe.sql`
 4. Clique em "Run" para executar
-5. ✅ Verifique se todas as tabelas foram criadas em **Table Editor**
+5. Em seguida, cole o conteúdo do arquivo `supabase/migrations/create_admin_user.sql`
+6. Clique em "Run" novamente
+7. ✅ Verifique se todas as tabelas foram criadas em **Table Editor**
+8. ✅ Verifique se o usuário admin foi criado em **Authentication** → **Users**
 
 ### 5️⃣ **Configurar Autenticação**
 1. Vá em **Authentication** → **Settings**
