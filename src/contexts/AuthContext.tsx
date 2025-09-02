@@ -88,10 +88,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         aud: 'authenticated',
         created_at: new Date().toISOString(),
       } as any);
+      
+      // Set demo profile
+      setProfile({
+        id: 'demo-user',
+        email: email,
+        full_name: 'Admin Demo',
+        role: 'admin',
+        institution_id: 'demo-institution',
+        avatar_url: null,
+      });
       return;
     }
 
     try {
+      if (!supabase) {
+        throw new Error('Supabase não configurado');
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
