@@ -228,11 +228,11 @@ export function LoginForm() {
           </form>
 
           {/* Demo Mode Notice */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-            <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
-              <strong>🚀 Modo Demo Ativo!</strong><br/>
-              <span className="text-xs">Use qualquer email/senha para entrar como <strong>Admin</strong></span><br/>
-              <span className="text-xs opacity-75">Ex: admin@inscribo.com / 123456</span>
+          <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+            <p className="text-sm text-green-700 dark:text-green-300 text-center">
+              <strong>🎯 Banco Real Conectado!</strong><br/>
+              <span className="text-xs">Crie sua conta clicando em <strong>"Cadastrar"</strong></span><br/>
+              <span className="text-xs opacity-75">Seus dados serão salvos no banco Supabase</span>
             </p>
           </div>
         </div>
