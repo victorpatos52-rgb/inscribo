@@ -156,11 +156,11 @@ export function LoginForm() {
           </form>
 
           {/* Login Credentials */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-            <p className="text-sm text-green-700 dark:text-green-300 text-center">
-              <strong>🔑 Credenciais de Acesso</strong><br/>
-              <span className="text-xs"><strong>E-mail:</strong> admin@inscribo.com</span><br/>
-              <span className="text-xs"><strong>Senha:</strong> admin123</span>
+          <div className="mt-6 p-6 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-green-300 dark:border-green-600 rounded-xl shadow-lg">
+            <p className="text-center">
+              <span className="text-lg font-bold text-green-800 dark:text-green-300">🔑 CREDENCIAIS DE ADMIN</span><br/>
+              <span className="text-base font-bold text-green-700 dark:text-green-300 mt-2 block">📧 E-mail: admin@inscribo.com</span><br/>
+              <span className="text-base font-bold text-green-700 dark:text-green-300">🔒 Senha: admin123</span>
             </p>
           </div>
         </div>
