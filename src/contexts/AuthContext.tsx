@@ -118,13 +118,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // In demo mode, simulate successful signup
-    if (!hasSupabaseConfig) {
-      // Just show success message, don't actually create user
-      return;
-    }
-
     try {
+      if (!hasSupabaseConfig) {
+        // In demo mode, simulate successful signup
+        return;
+      }
+
+      if (!supabase) {
+        throw new Error('Supabase não configurado');
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
