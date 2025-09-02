@@ -257,7 +257,7 @@ CREATE POLICY "Admins can manage webhooks" ON webhooks FOR ALL TO authenticated 
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO profiles (id, email, full_name, role)
+    INSERT INTO profiles (id, email, full_name, role, institution_id)
     VALUES (
         NEW.id,
         NEW.email,
