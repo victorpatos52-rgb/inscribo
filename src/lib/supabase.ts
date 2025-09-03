@@ -1,24 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 
+// 🔧 DIAGNÓSTICO DETALHADO
+console.log('🔧 DIAGNÓSTICO SUPABASE:');
+console.log('🔧 import.meta.env:', import.meta.env);
+console.log('🔧 VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('🔧 VITE_SUPABASE_ANON_KEY exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+console.log('🔧 VITE_SUPABASE_ANON_KEY length:', import.meta.env.VITE_SUPABASE_ANON_KEY?.length);
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Debug environment variables
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key exists:', !!supabaseAnonKey);
-
-// Create client even without proper env vars for demo purposes
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
-
-console.log('Supabase client created:', !!supabase);
 
 // Check if we have proper Supabase configuration
 export const hasSupabaseConfig = !!(
   import.meta.env.VITE_SUPABASE_URL && 
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
+
+console.log('🔧 hasSupabaseConfig:', hasSupabaseConfig);
+
+// Create client
+export const supabase = hasSupabaseConfig
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+console.log('🔧 Supabase client created:', !!supabase);
+
+if (supabase) {
+  console.log('🔧 Testando conexão com Supabase...');
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.error('🔧 Erro na conexão:', error);
+    } else {
+      console.log('🔧 Conexão OK, sessão:', !!data.session);
+    }
+  });
+}
 
 export type Database = {
   public: {
