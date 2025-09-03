@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { SunIcon, MoonIcon, BellIcon, UserIcon, CogIcon } from '@heroicons/react/24/outline';
+import { 
+  SunIcon, 
+  MoonIcon, 
+  BellIcon, 
+  UserIcon, 
+  CogIcon,
+  ArrowRightOnRectangleIcon,
+  ChevronDownIcon
+} from '@heroicons/react/24/outline';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { ProfileModal } from './ProfileModal';
@@ -11,9 +19,10 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
-  const { profile, user } = useAuth();
+  const { profile, user, signOut } = useAuth(); // 🔧 Adicionar signOut
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false); // 🔧 Adicionar menu do usuário
 
   // Ensure we have a profile with admin role for demo mode
   const currentProfile = profile || {
@@ -23,6 +32,18 @@ export function Header({ title, subtitle }: HeaderProps) {
     role: 'admin' as const,
     institution_id: 'demo-institution',
     avatar_url: null,
+  };
+
+  // 🔧 Função para logout
+  const handleLogout = async () => {
+    try {
+      console.log('🔧 Iniciando logout do Header...');
+      setShowUserMenu(false);
+      await signOut();
+      console.log('🔧 Logout concluído com sucesso');
+    } catch (error) {
+      console.error('🔧 Erro no logout:', error);
+    }
   };
 
   // Mock notifications
@@ -131,10 +152,10 @@ export function Header({ title, subtitle }: HeaderProps) {
               )}
             </button>
 
-            {/* User Profile Menu */}
+            {/* 🔧 User Profile Menu com Dropdown */}
             <div className="relative">
               <button 
-                onClick={() => setShowProfileModal(true)}
+                onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center space-x-3 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
               >
                 <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-2 rounded-full">
@@ -150,18 +171,61 @@ export function Header({ title, subtitle }: HeaderProps) {
                     {currentProfile?.role === 'admin' ? 'Administrador' : 'Usuário'}
                   </p>
                 </div>
+                <ChevronDownIcon className="h-4 w-4" />
               </button>
+
+              {/* 🔧 Dropdown Menu */}
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50">
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowProfileModal(true);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <UserIcon className="h-5 w-5 mr-3" />
+                      Perfil
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        // Adicionar lógica de configurações se necessário
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <CogIcon className="h-5 w-5 mr-3" />
+                      Configurações
+                    </button>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3" />
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
         </div>
       </header>
 
-      {/* Close notifications when clicking outside */}
-      {showNotifications && (
+      {/* 🔧 Close dropdowns when clicking outside */}
+      {(showNotifications || showUserMenu) && (
         <div 
           className="fixed inset-0 z-40" 
-          onClick={() => setShowNotifications(false)}
+          onClick={() => {
+            setShowNotifications(false);
+            setShowUserMenu(false);
+          }}
         />
       )}
 
