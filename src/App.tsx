@@ -12,7 +12,7 @@ import { UserManagement } from './components/users/UserManagement';
 import { Settings } from './components/settings/Settings';
 
 function App() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth(); // 🔧 Adicionar signOut aqui
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   // Show loading while checking auth
@@ -48,7 +48,7 @@ function App() {
         currentPage={currentPage} 
         onPageChange={setCurrentPage}
         profile={currentProfile}
-        onSignOut={signOut}
+        onSignOut={signOut} // 🔧 Agora está correto
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
