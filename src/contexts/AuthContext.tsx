@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email); // 🔧 Debug log
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
@@ -66,18 +67,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
+      console.log('Buscando perfil para usuário:', userId); // 🔧 Debug log
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
-      setProfile(data);
+      if (error) {
+        console.log('Erro ao buscar perfil (pode ser normal para novos usuários):', error.message);
+        // 🔧 Não tratar como erro fatal - usuário pode não ter perfil ainda
+        setProfile(null);
+      } else {
+        console.log('Perfil encontrado:', data); // 🔧 Debug log
+        setProfile(data);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setProfile(null); // 🔧 Garantir que profile seja null em caso de erro
     } finally {
-      setLoading(false);
+      console.log('Finalizando carregamento do perfil'); // 🔧 Debug log
+      setLoading(false); // 🔧 IMPORTANTE: Sempre setar loading como false
     }
   };
 
@@ -87,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
+      setLoading(true); // 🔧 Iniciar loading no login
       console.log('Tentando fazer login com:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -97,8 +108,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Erro específico:', error.message, error.status);
         throw error;
       }
+      // 🔧 Não definir loading=false aqui, deixar para o onAuthStateChange
+      console.log('Login realizado com sucesso!');
     } catch (error) {
       console.error('Supabase auth error:', error);
+      setLoading(false); // 🔧 Parar loading em caso de erro
       throw new Error(`Erro ao fazer login: ${error.message}`);
     }
   };
