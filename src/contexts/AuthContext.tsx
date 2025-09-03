@@ -29,161 +29,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If no Supabase config, set demo mode
+    console.log('🔧 Iniciando AuthProvider...');
+    console.log('🔧 hasSupabaseConfig:', hasSupabaseConfig);
+    console.log('🔧 supabase client exists:', !!supabase);
+    
+    // Se não há configuração do Supabase, usar modo demo
     if (!hasSupabaseConfig || !supabase) {
-      console.log('⚠️ Supabase não configurado - modo demo');
+      console.log('🔧 Modo demo ativado - sem Supabase');
       setLoading(false);
       return;
     }
 
-    let mounted = true; // 🔧 Prevenir race conditions
-
-    // Get initial session
-    const getInitialSession = async () => {
+    // Função para inicializar autenticação
+    const initializeAuth = async () => {
       try {
+        console.log('🔧 Verificando sessão inicial...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Erro ao obter sessão inicial:', error);
-          if (mounted) {
-            setLoading(false);
-          }
+          console.error('🔧 Erro ao verificar sessão:', error);
+          setLoading(false);
           return;
         }
 
-        if (mounted) {
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            await fetchProfile(session.user.id);
-          } else {
-            setLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error('Erro na sessão inicial:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    getInitialSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 Auth state change:', event, session?.user?.email);
-      
-      if (!mounted) return;
-
-      if (event === 'SIGNED_OUT') {
-        console.log('👋 Usuário saiu');
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        console.log('✅ Usuário logado');
+        console.log('🔧 Sessão encontrada:', !!session?.user);
         setUser(session?.user ?? null);
+        
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
-          setProfile(null);
           setLoading(false);
         }
+      } catch (error) {
+        console.error('🔧 Erro na inicialização:', error);
+        setLoading(false);
+      }
+    };
+
+    // Executar inicialização
+    initializeAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔧 Auth state change:', event, !!session?.user);
+      
+      setUser(session?.user ?? null);
+      
+      if (session?.user && event !== 'SIGNED_OUT') {
+        await fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+        setLoading(false);
       }
     });
 
     return () => {
-      mounted = false;
+      console.log('🔧 Limpando subscription...');
       subscription.unsubscribe();
     };
   }, []);
 
   const fetchProfile = async (userId: string) => {
     if (!supabase) {
-      console.log('⚠️ Supabase não disponível');
       setLoading(false);
       return;
     }
     
     try {
-      console.log('🔍 Buscando perfil para usuário:', userId);
+      console.log('🔧 Buscando perfil para:', userId);
       
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // 🔧 Use maybeSingle() ao invés de single()
-
-      if (error) {
-        console.error('❌ Erro ao buscar perfil:', error.message);
-        
-        // 🔧 Se erro for "not found", criar perfil padrão
-        if (error.code === 'PGRST116') {
-          console.log('📝 Perfil não encontrado, criando perfil padrão...');
-          await createDefaultProfile(userId);
-        } else {
-          setProfile(null);
-        }
-      } else if (data) {
-        console.log('✅ Perfil encontrado:', data);
-        setProfile(data);
-      } else {
-        console.log('📝 Nenhum perfil encontrado, criando perfil padrão...');
-        await createDefaultProfile(userId);
-      }
-    } catch (error) {
-      console.error('💥 Erro inesperado ao buscar perfil:', error);
-      setProfile(null);
-    } finally {
-      console.log('✨ Finalizando carregamento do perfil');
-      setLoading(false); // 🔧 SEMPRE finalizar loading
-    }
-  };
-
-  // 🔧 NOVA FUNÇÃO: Criar perfil padrão
-  const createDefaultProfile = async (userId: string) => {
-    if (!supabase || !user) return;
-
-    try {
-      const defaultProfile = {
-        id: userId,
-        email: user.email || 'user@email.com',
-        full_name: user.user_metadata?.full_name || 'Usuário',
-        role: 'user' as const,
-        institution_id: null,
-        avatar_url: null,
-      };
-
-      console.log('📝 Criando perfil padrão:', defaultProfile);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert(defaultProfile)
-        .select()
         .single();
 
       if (error) {
-        console.error('❌ Erro ao criar perfil padrão:', error);
-        // Mesmo com erro, usar perfil temporário
-        setProfile(defaultProfile);
+        if (error.code === 'PGRST116') {
+          console.log('🔧 Perfil não encontrado, criando perfil básico...');
+          // Perfil não existe, criar um perfil padrão
+          const newProfile = {
+            id: userId,
+            email: user?.email || '',
+            full_name: user?.user_metadata?.full_name || 'Usuário',
+            role: 'user' as const,
+            institution_id: null,
+            avatar_url: null,
+          };
+          setProfile(newProfile);
+        } else {
+          console.error('🔧 Erro ao buscar perfil:', error);
+          setProfile(null);
+        }
       } else {
-        console.log('✅ Perfil padrão criado:', data);
+        console.log('🔧 Perfil encontrado:', data);
         setProfile(data);
       }
     } catch (error) {
-      console.error('💥 Erro ao criar perfil padrão:', error);
-      // Usar perfil temporário como fallback
-      setProfile({
-        id: userId,
-        email: user.email || 'user@email.com',
-        full_name: user.user_metadata?.full_name || 'Usuário',
-        role: 'user' as const,
-        institution_id: null,
-        avatar_url: null,
-      });
+      console.error('🔧 Erro inesperado ao buscar perfil:', error);
+      setProfile(null);
+    } finally {
+      console.log('🔧 Finalizando carregamento do perfil');
+      setLoading(false);
     }
   };
 
@@ -194,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       setLoading(true);
-      console.log('🔑 Tentando fazer login com:', email);
+      console.log('🔧 Tentando fazer login...');
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -202,16 +149,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        console.error('❌ Erro no login:', error.message);
+        console.error('🔧 Erro no login:', error);
         throw error;
       }
       
-      console.log('✅ Login realizado com sucesso!');
-      // Não definir loading=false aqui, deixar para o onAuthStateChange
-    } catch (error: any) {
-      console.error('💥 Erro de autenticação:', error);
+      console.log('🔧 Login bem-sucedido');
+      // O onAuthStateChange vai lidar com o resto
+      
+    } catch (error) {
+      console.error('🔧 Erro no signIn:', error);
       setLoading(false);
-      throw new Error(`Erro ao fazer login: ${error.message}`);
+      throw error;
     }
   };
 
@@ -231,46 +179,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       if (error) throw error;
-    } catch (error: any) {
-      console.error('Supabase signup error:', error);
-      throw new Error('Erro ao criar conta. Tente novamente.');
+    } catch (error) {
+      console.error('🔧 Erro no signup:', error);
+      throw error;
     }
   };
 
   const signOut = async () => {
-    console.log('🚪 Iniciando logout...');
+    console.log('🔧 Executando signOut...');
     
     if (!supabase) {
-      console.log('⚠️ Supabase não disponível, limpando estado local');
       setUser(null);
       setProfile(null);
-      setLoading(false);
       return;
     }
     
     try {
-      setLoading(true); // 🔧 Mostrar loading durante logout
-      
       const { error } = await supabase.auth.signOut();
-      
       if (error) {
-        console.error('❌ Erro no logout:', error);
+        console.error('🔧 Erro no signOut:', error);
         throw error;
       }
+      console.log('🔧 SignOut bem-sucedido');
       
-      console.log('✅ Logout realizado com sucesso');
-      
-      // 🔧 Limpar estado imediatamente
+      // Limpar estado local
       setUser(null);
       setProfile(null);
       
-    } catch (error: any) {
-      console.error('💥 Erro no logout:', error);
-      // Mesmo com erro, limpar estado local
+    } catch (error) {
+      console.error('🔧 Erro no signOut:', error);
+      // Limpar estado mesmo se der erro
       setUser(null);
       setProfile(null);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -284,9 +224,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-    } catch (error: any) {
-      console.error('Supabase reset password error:', error);
-      throw new Error('Erro ao enviar e-mail de recuperação. Tente novamente.');
+    } catch (error) {
+      console.error('🔧 Erro no resetPassword:', error);
+      throw error;
     }
   };
 
