@@ -27,110 +27,169 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    console.log('🔧 Iniciando AuthProvider...');
-    console.log('🔧 hasSupabaseConfig:', hasSupabaseConfig);
-    console.log('🔧 supabase client exists:', !!supabase);
-    
-    // Se não há configuração do Supabase, usar modo demo
-    if (!hasSupabaseConfig || !supabase) {
-      console.log('🔧 Modo demo ativado - sem Supabase');
+    // 🔧 TIMEOUT DE SEGURANÇA - Se não resolver em 5 segundos, para o loading
+    const safetyTimeout = setTimeout(() => {
+      console.warn('⚠️ Timeout de segurança ativado - parando loading');
       setLoading(false);
-      return;
-    }
+      setInitializing(false);
+    }, 5000);
 
-    // Função para inicializar autenticação
     const initializeAuth = async () => {
       try {
-        console.log('🔧 Verificando sessão inicial...');
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🚀 Inicializando autenticação...');
         
-        if (error) {
-          console.error('🔧 Erro ao verificar sessão:', error);
+        // Se não tem configuração do Supabase, modo demo
+        if (!hasSupabaseConfig || !supabase) {
+          console.log('⚠️ Supabase não configurado - modo demo');
+          clearTimeout(safetyTimeout);
           setLoading(false);
+          setInitializing(false);
           return;
         }
 
-        console.log('🔧 Sessão encontrada:', !!session?.user);
-        setUser(session?.user ?? null);
+        console.log('🔍 Buscando sessão atual...');
         
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setLoading(false);
+        // Buscar sessão atual com timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        );
+
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
+
+        if (error) {
+          console.error('❌ Erro ao buscar sessão:', error);
+          throw error;
         }
+
+        console.log('📋 Sessão encontrada:', !!session?.user);
+
+        if (session?.user) {
+          setUser(session.user);
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+
+        // Setup do listener de mudanças de auth
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('🔄 Auth state mudou:', event);
+            
+            if (event === 'SIGNED_OUT') {
+              console.log('👋 Usuário deslogou');
+              setUser(null);
+              setProfile(null);
+              return;
+            }
+
+            if (event === 'SIGNED_IN' && session?.user) {
+              console.log('✅ Usuário logou');
+              setUser(session.user);
+              await fetchUserProfile(session.user.id);
+            }
+
+            if (event === 'TOKEN_REFRESHED' && session?.user) {
+              console.log('🔄 Token renovado');
+              setUser(session.user);
+            }
+          }
+        );
+
+        // Cleanup
+        return () => {
+          subscription.unsubscribe();
+        };
+
       } catch (error) {
-        console.error('🔧 Erro na inicialização:', error);
+        console.error('💥 Erro na inicialização:', error);
+        setUser(null);
+        setProfile(null);
+      } finally {
+        clearTimeout(safetyTimeout);
         setLoading(false);
+        setInitializing(false);
+        console.log('✅ Inicialização completa');
       }
     };
 
-    // Executar inicialização
     initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔧 Auth state change:', event, !!session?.user);
-      
-      setUser(session?.user ?? null);
-      
-      if (session?.user && event !== 'SIGNED_OUT') {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
     return () => {
-      console.log('🔧 Limpando subscription...');
-      subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string) => {
     if (!supabase) {
-      setLoading(false);
+      console.log('⚠️ Supabase não disponível para buscar perfil');
       return;
     }
-    
+
     try {
-      console.log('🔧 Buscando perfil para:', userId);
-      
+      console.log('👤 Buscando perfil do usuário:', userId);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Erro ao buscar perfil:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('✅ Perfil encontrado:', data.full_name);
+        setProfile(data);
+      } else {
+        console.log('📝 Perfil não encontrado, criando...');
+        await createUserProfile(userId);
+      }
+    } catch (error) {
+      console.error('💥 Erro inesperado ao buscar perfil:', error);
+    }
+  };
+
+  const createUserProfile = async (userId: string) => {
+    if (!supabase || !user) return;
+
+    try {
+      const newProfile = {
+        id: userId,
+        email: user.email || 'user@email.com',
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+        role: 'user' as const,
+        institution_id: '00000000-0000-0000-0000-000000000001', // Instituição padrão
+        avatar_url: null,
+      };
+
+      console.log('📝 Criando novo perfil:', newProfile);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          console.log('🔧 Perfil não encontrado, criando perfil básico...');
-          // Perfil não existe, criar um perfil padrão
-          const newProfile = {
-            id: userId,
-            email: user?.email || '',
-            full_name: user?.user_metadata?.full_name || 'Usuário',
-            role: 'user' as const,
-            institution_id: null,
-            avatar_url: null,
-          };
-          setProfile(newProfile);
-        } else {
-          console.error('🔧 Erro ao buscar perfil:', error);
-          setProfile(null);
-        }
+        console.error('❌ Erro ao criar perfil:', error);
+        // Usar perfil local como fallback
+        setProfile(newProfile);
       } else {
-        console.log('🔧 Perfil encontrado:', data);
+        console.log('✅ Perfil criado com sucesso:', data);
         setProfile(data);
       }
     } catch (error) {
-      console.error('🔧 Erro inesperado ao buscar perfil:', error);
-      setProfile(null);
-    } finally {
-      console.log('🔧 Finalizando carregamento do perfil');
-      setLoading(false);
+      console.error('💥 Erro ao criar perfil:', error);
     }
   };
 
@@ -138,28 +197,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       throw new Error('Configuração do Supabase não encontrada.');
     }
-    
+
     try {
       setLoading(true);
-      console.log('🔧 Tentando fazer login...');
-      
+      console.log('🔑 Fazendo login...');
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
+
       if (error) {
-        console.error('🔧 Erro no login:', error);
+        console.error('❌ Erro no login:', error);
         throw error;
       }
-      
-      console.log('🔧 Login bem-sucedido');
+
+      console.log('✅ Login realizado com sucesso');
       // O onAuthStateChange vai lidar com o resto
-      
-    } catch (error) {
-      console.error('🔧 Erro no signIn:', error);
+    } catch (error: any) {
+      console.error('💥 Erro de login:', error);
       setLoading(false);
-      throw error;
+      throw new Error(error.message || 'Erro ao fazer login');
     }
   };
 
@@ -167,9 +225,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       throw new Error('Configuração do Supabase não encontrada.');
     }
-    
+
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('📝 Criando nova conta...');
+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -178,39 +238,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         },
       });
-      if (error) throw error;
-    } catch (error) {
-      console.error('🔧 Erro no signup:', error);
-      throw error;
+
+      if (error) {
+        console.error('❌ Erro no signup:', error);
+        throw error;
+      }
+
+      console.log('✅ Conta criada com sucesso:', data);
+    } catch (error: any) {
+      console.error('💥 Erro ao criar conta:', error);
+      throw new Error(error.message || 'Erro ao criar conta');
     }
   };
 
   const signOut = async () => {
-    console.log('🔧 Executando signOut...');
-    
-    if (!supabase) {
-      setUser(null);
-      setProfile(null);
-      return;
-    }
-    
+    console.log('🚪 Fazendo logout...');
+
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('🔧 Erro no signOut:', error);
-        throw error;
+      setLoading(true);
+
+      if (supabase) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('❌ Erro no logout:', error);
+        }
       }
-      console.log('🔧 SignOut bem-sucedido');
-      
+
       // Limpar estado local
       setUser(null);
       setProfile(null);
-      
-    } catch (error) {
-      console.error('🔧 Erro no signOut:', error);
-      // Limpar estado mesmo se der erro
+
+      // Forçar reload da página para limpar qualquer estado residual
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+
+    } catch (error: any) {
+      console.error('💥 Erro no logout:', error);
+      // Mesmo com erro, limpar estado
       setUser(null);
       setProfile(null);
+      window.location.reload();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,17 +288,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       throw new Error('Configuração do Supabase não encontrada.');
     }
-    
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-    } catch (error) {
-      console.error('🔧 Erro no resetPassword:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Supabase reset password error:', error);
+      throw new Error('Erro ao enviar e-mail de recuperação. Tente novamente.');
     }
   };
+
+  // 🔧 MOSTRAR LOADING APENAS SE REALMENTE INICIALIZANDO
+  const shouldShowLoading = initializing || loading;
 
   const value = {
     user,
@@ -237,7 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resetPassword,
-    loading,
+    loading: shouldShowLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
