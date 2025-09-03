@@ -6,7 +6,6 @@ import {
   ChartBarIcon,
   CogIcon,
   UsersIcon,
-  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 
@@ -32,16 +31,6 @@ export function Sidebar({ currentPage, onPageChange, profile, onSignOut }: Sideb
       { id: 'settings', name: 'Configurações', icon: CogIcon },
     ] : []),
   ];
-
-  const handleSignOut = async () => {
-    try {
-      console.log('Tentando fazer logout...');
-      await onSignOut();
-      console.log('Logout realizado com sucesso');
-    } catch (error) {
-      console.error('Erro no logout:', error);
-    }
-  };
 
   return (
     <div className="bg-white dark:bg-gray-800 w-64 min-h-screen shadow-lg flex flex-col">
@@ -74,9 +63,9 @@ export function Sidebar({ currentPage, onPageChange, profile, onSignOut }: Sideb
         </ul>
       </nav>
 
-      {/* 🔧 SEÇÃO DO USUÁRIO E LOGOUT */}
+      {/* 🔧 SEÇÃO DO USUÁRIO (sem botão de sair - vai ficar só no header) */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">
               {profile?.full_name || 'Usuário'}
@@ -86,14 +75,6 @@ export function Sidebar({ currentPage, onPageChange, profile, onSignOut }: Sideb
             </p>
           </div>
         </div>
-        
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center px-4 py-3 text-left rounded-lg transition-all text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3" />
-          Sair
-        </button>
       </div>
     </div>
   );
