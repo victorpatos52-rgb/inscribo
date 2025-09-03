@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../../lib/supabase'; // Certifique-se de importar o supabase
 
@@ -10,6 +10,8 @@ export function LeadsKanban() {
 
     const leadId = result.draggableId;
     const newStageId = result.destination.droppableId;
+
+    setLoading(true); // Inicia o carregamento
 
     // Atualiza o estado local
     setLeads(prevLeads =>
@@ -32,6 +34,8 @@ export function LeadsKanban() {
       console.log('Lead atualizado no Supabase:', data);
     } catch (error) {
       console.error('Erro ao atualizar lead no Supabase:', error);
+    } finally {
+      setLoading(false); // Finaliza o carregamento
     }
   };
 
