@@ -84,19 +84,18 @@ export function NewLeadModal({ onClose, onSave }: NewLeadModalProps) {
   // Função de Inserção de Lead no Supabase
   const handleSaveLead = async (leadData: Lead) => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('leads')
-        .insert([leadData]);
+      setLoading(true); // Inicia o carregamento
+      const { data, error } = await supabase.from('leads').insert([leadData]);
 
-      if (error) throw error;
+      if (error) throw error; // Se houver erro, lançamos a exceção
 
       console.log('Lead inserido com sucesso:', data);
+      onClose(); // Fecha o modal de novo lead
     } catch (err: any) {
       console.error('Erro ao salvar lead no Supabase:', err);
-      setError('Erro ao salvar lead');
+      setError('Erro ao salvar lead'); // Define a mensagem de erro
     } finally {
-      setLoading(false);
+      setLoading(false); // Finaliza o carregamento
     }
   };
 
@@ -117,14 +116,13 @@ export function NewLeadModal({ onClose, onSave }: NewLeadModalProps) {
       // Se agendou visita, criar a visita também
       if (scheduleVisit && visitData.date && visitData.time) {
         const visitDateTime = new Date(`${visitData.date}T${visitData.time}`);
-        // Aqui você pode adicionar a lógica para criar a visita
         console.log('Visita agendada:', {
           leadName: formData.student_name,
           date: visitDateTime,
           description: visitData.description,
         });
       }
-      
+
       onClose();
     } catch (err: any) {
       setError(err.message || 'Erro ao salvar lead');
