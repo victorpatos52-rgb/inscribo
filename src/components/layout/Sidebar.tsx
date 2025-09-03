@@ -33,6 +33,16 @@ export function Sidebar({ currentPage, onPageChange, profile, onSignOut }: Sideb
     ] : []),
   ];
 
+  const handleSignOut = async () => {
+    try {
+      console.log('Tentando fazer logout...');
+      await onSignOut();
+      console.log('Logout realizado com sucesso');
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 w-64 min-h-screen shadow-lg flex flex-col">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -64,6 +74,27 @@ export function Sidebar({ currentPage, onPageChange, profile, onSignOut }: Sideb
         </ul>
       </nav>
 
+      {/* 🔧 SEÇÃO DO USUÁRIO E LOGOUT */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">
+              {profile?.full_name || 'Usuário'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+              {profile?.role || 'user'}
+            </p>
+          </div>
+        </div>
+        
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center px-4 py-3 text-left rounded-lg transition-all text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+        >
+          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3" />
+          Sair
+        </button>
+      </div>
     </div>
   );
 }
