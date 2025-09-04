@@ -1,41 +1,19 @@
+// src/components/leads/NewLeadModal.tsx - VERSÃO ATUALIZADA
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, UserIcon, AcademicCapIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
-
-interface Lead {
-  student_name: string;
-  parent_name: string;
-  email: string;
-  phone: string;
-  grade_level: string;
-  course_interest: string;
-  source: string;
-  notes: string;
-  current_stage: string;
-  birth_date: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  parent_phone: string;
-  parent_email: string;
-  emergency_contact: string;
-  emergency_phone: string;
-  medical_info: string;
-  previous_school: string;
-  transfer_reason: string;
-  interests: string;
-  learning_difficulties: string;
-  family_income: string;
-  scholarship_interest: boolean;
-}
+import { useLeads, Lead } from '../../hooks/useLeads';
+import { useVisits } from '../../hooks/useVisits';
 
 interface NewLeadModalProps {
   onClose: () => void;
-  onSave: (lead: Omit<Lead, 'id' | 'created_at' | 'updated_at'>) => void;
+  onSave: () => void;
 }
 
 export function NewLeadModal({ onClose, onSave }: NewLeadModalProps) {
+  const { createLead } = useLeads();
+  const { createVisit } = useVisits();
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [scheduleVisit, setScheduleVisit] = useState(false);
   const [visitData, setVisitData] = useState({
@@ -43,7 +21,7 @@ export function NewLeadModal({ onClose, onSave }: NewLeadModalProps) {
     time: '',
     description: 'Visita para conhecer a escola e projeto pedagógico',
   });
-  const [formData, setFormData] = useState<Lead>({
+  const [formData, setFormData] = useState({
     student_name: '',
     parent_name: '',
     email: '',
@@ -91,28 +69,54 @@ export function NewLeadModal({ onClose, onSave }: NewLeadModalProps) {
     setError('');
 
     try {
-      onSave(formData);
+      console.log('📝 Criando novo lead...');
+
+      // Preparar dados do lead removendo campos undefined
+      const leadData = Object.fromEntries(
+        Object.entries(formData).filter(([_, v]) => v !== '' && v !== undefined)
+      ) as Omit<Lead, 'id' | 'created_at' | 'updated_at'>;
+
+      // Criar o lead
+      const newLead = await createLead(leadData);
+      console.log('✅ Lead criado:', newLead);
       
       // Se agendou visita, criar a visita também
-      if (scheduleVisit && visitData.date && visitData.time) {
-        const visitDateTime = new Date(`${visitData.date}T${visitData.time}`);
-        // Aqui você pode adicionar a lógica para criar a visita
-        console.log('Visita agendada:', {
-          leadName: formData.student_name,
-          date: visitDateTime,
-          description: visitData.description,
-        });
+      if (scheduleVisit && visitData.date && visitData.time && newLead) {
+        try {
+          console.log('📅 Agendando visita...');
+          
+          const visitDateTime = new Date(`${visitData.date}T${visitData.time}`);
+          
+                      await createVisit({
+            lead_id: newLead.id,
+            scheduled_by: null, // Será preenchido pelo hook
+            title: `Visita - ${formData.student_name}`,
+            description: visitData.description,
+            scheduled_date: visitDateTime.toISOString(),
+            duration_minutes: 60,
+            status: 'scheduled',
+            notes: null,
+          });
+          
+          console.log('✅ Visita agendada com sucesso');
+        } catch (visitError: any) {
+          console.error('❌ Erro ao agendar visita:', visitError);
+          // Não impedir o salvamento do lead por erro na visita
+        }
       }
       
+      alert('Lead criado com sucesso!' + (scheduleVisit && visitData.date ? ' Visita agendada.' : ''));
+      onSave();
       onClose();
     } catch (err: any) {
+      console.error('💥 Erro ao salvar lead:', err);
       setError(err.message || 'Erro ao salvar lead');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field: keyof Lead, value: string | boolean) => {
+  const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
