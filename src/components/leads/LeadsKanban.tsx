@@ -1,23 +1,10 @@
-import React, { useEffect, useState } from 'react';
+// src/components/leads/LeadsKanban.tsx - VERSÃO ATUALIZADA
+import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { PlusIcon, EyeIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, EyeIcon, PhoneIcon, EnvelopeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { LeadModal } from './LeadModal';
 import { NewLeadModal } from './NewLeadModal';
-
-interface Lead {
-  id: string;
-  student_name: string;
-  parent_name: string | null;
-  email: string | null;
-  phone: string | null;
-  grade_level: string | null;
-  course_interest: string | null;
-  current_stage: string | null;
-  notes: string | null;
-  source: string;
-  created_at: string;
-  updated_at: string;
-}
+import { useLeads, Lead } from '../../hooks/useLeads';
 
 interface Stage {
   id: string;
@@ -27,7 +14,8 @@ interface Stage {
 }
 
 export function LeadsKanban() {
-  const [stages, setStages] = useState<Stage[]>([
+  const { leads, loading, error, refetch, updateLead } = useLeads();
+  const [stages] = useState<Stage[]>([
     { id: '1', name: 'Novo', color: '#8B5CF6', order_index: 1 },
     { id: '2', name: 'Contato', color: '#06B6D4', order_index: 2 },
     { id: '3', name: 'Agendado', color: '#F59E0B', order_index: 3 },
@@ -36,102 +24,8 @@ export function LeadsKanban() {
     { id: '6', name: 'Matrícula', color: '#10B981', order_index: 6 },
   ]);
   
-  const [leads, setLeads] = useState<Lead[]>([
-    {
-      id: '1',
-      student_name: 'Ana Silva',
-      parent_name: 'Maria Silva',
-      email: 'maria@email.com',
-      phone: '(11) 99999-9999',
-      grade_level: '1º EM',
-      course_interest: 'Ensino Médio',
-      current_stage: '1',
-      notes: 'Interessada em conhecer a escola. Procura por ensino de qualidade.',
-      source: 'website',
-      assigned_to: 'João Santos',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      student_name: 'João Santos',
-      parent_name: 'Pedro Santos',
-      email: 'pedro@email.com',
-      phone: '(11) 88888-8888',
-      grade_level: '6º ano',
-      course_interest: 'Ensino Fundamental',
-      current_stage: '2',
-      notes: 'Já fez contato inicial. Interessado em atividades extracurriculares.',
-      source: 'indicacao',
-      assigned_to: 'Maria Costa',
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      student_name: 'Carla Oliveira',
-      parent_name: 'Ana Oliveira',
-      email: 'ana@email.com',
-      phone: '(11) 77777-7777',
-      grade_level: '3º EM',
-      course_interest: 'Pré-vestibular',
-      current_stage: '3',
-      notes: 'Visita agendada para próxima semana. Foco em preparação para vestibular.',
-      source: 'facebook',
-      assigned_to: 'João Santos',
-      created_at: new Date(Date.now() - 172800000).toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '4',
-      student_name: 'Lucas Costa',
-      parent_name: 'Roberto Costa',
-      email: 'roberto@email.com',
-      phone: '(11) 66666-6666',
-      grade_level: '2º EM',
-      course_interest: 'Ensino Médio',
-      current_stage: '4',
-      notes: 'Visitou a escola ontem. Muito interessado no laboratório de ciências.',
-      source: 'google',
-      assigned_to: 'Ana Lima',
-      created_at: new Date(Date.now() - 259200000).toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '5',
-      student_name: 'Beatriz Lima',
-      parent_name: 'Fernanda Lima',
-      email: 'fernanda@email.com',
-      phone: '(11) 55555-5555',
-      grade_level: '9º ano',
-      course_interest: 'Ensino Fundamental',
-      current_stage: '5',
-      notes: 'Proposta enviada. Aguardando retorno da família.',
-      source: 'instagram',
-      assigned_to: 'Maria Costa',
-      created_at: new Date(Date.now() - 345600000).toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '6',
-      student_name: 'Gabriel Souza',
-      parent_name: 'Marcos Souza',
-      email: 'marcos@email.com',
-      phone: '(11) 44444-4444',
-      grade_level: '1º ano',
-      course_interest: 'Ensino Fundamental',
-      current_stage: '6',
-      notes: 'Matrícula confirmada! Início das aulas em fevereiro.',
-      source: 'indicacao',
-      assigned_to: 'João Santos',
-      created_at: new Date(Date.now() - 432000000).toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ]);
-  
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showNewLeadModal, setShowNewLeadModal] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
@@ -139,36 +33,26 @@ export function LeadsKanban() {
     const leadId = result.draggableId;
     const newStageId = result.destination.droppableId;
 
-    setLeads(prevLeads =>
-      prevLeads.map(lead =>
-        lead.id === leadId
-          ? { ...lead, current_stage: newStageId, updated_at: new Date().toISOString() }
-          : lead
-      )
-    );
+    // Atualizar otimisticamente na UI
+    const leadToUpdate = leads.find(lead => lead.id === leadId);
+    if (leadToUpdate && leadToUpdate.current_stage !== newStageId) {
+      try {
+        await updateLead(leadId, { current_stage: newStageId });
+        console.log('✅ Lead movido com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao mover lead:', error);
+        // A UI já foi atualizada otimisticamente pelo hook
+      }
+    }
   };
 
   const getLeadsByStage = (stageId: string) => {
     return leads.filter(lead => lead.current_stage === stageId);
   };
 
-  const handleNewLead = (newLead: Omit<Lead, 'id' | 'created_at' | 'updated_at'>) => {
-    const lead: Lead = {
-      ...newLead,
-      id: Date.now().toString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    setLeads(prev => [lead, ...prev]);
-  };
-
   const handleUpdateLead = (updatedLead: Lead) => {
-    setLeads(prev => prev.map(lead => 
-      lead.id === updatedLead.id 
-        ? { ...updatedLead, updated_at: new Date().toISOString() }
-        : lead
-    ));
-    setSelectedLead(null); // Close modal after update
+    // O hook já cuida da atualização
+    setSelectedLead(null);
   };
 
   const getSourceColor = (source: string) => {
@@ -184,6 +68,17 @@ export function LeadsKanban() {
     return colors[source] || colors.outros;
   };
 
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <p className="ml-4 text-gray-600 dark:text-gray-400">Carregando leads...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="p-8">
@@ -195,14 +90,31 @@ export function LeadsKanban() {
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               Gerencie seus leads através do funil de vendas
             </p>
+            {error && (
+              <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800 rounded-lg">
+                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                  ⚠️ {error} (usando dados de demonstração)
+                </p>
+              </div>
+            )}
           </div>
-          <button
-            onClick={() => setShowNewLeadModal(true)}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl flex items-center transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Novo Lead
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={refetch}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-xl flex items-center transition-all"
+              title="Atualizar dados"
+            >
+              <ArrowPathIcon className="h-5 w-5 mr-2" />
+              Atualizar
+            </button>
+            <button
+              onClick={() => setShowNewLeadModal(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl flex items-center transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Novo Lead
+            </button>
+          </div>
         </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -259,9 +171,11 @@ export function LeadsKanban() {
                                 </p>
                               )}
                               
-                              <p className="text-xs text-purple-600 dark:text-purple-400 mb-2 font-semibold bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-lg">
-                                <span className="text-xs">👨‍💼</span> {lead.assigned_to}
-                              </p>
+                              {lead.assigned_to && (
+                                <p className="text-xs text-purple-600 dark:text-purple-400 mb-2 font-semibold bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-lg">
+                                  <span className="text-xs">👨‍💼</span> {lead.assigned_to}
+                                </p>
+                              )}
                               
                               {lead.course_interest && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
@@ -305,6 +219,29 @@ export function LeadsKanban() {
             ))}
           </div>
         </DragDropContext>
+
+        {/* Empty State */}
+        {leads.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <div className="max-w-md mx-auto">
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+                <PlusIcon className="h-12 w-12 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Nenhum lead encontrado
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Comece criando seu primeiro lead para aparecer no funil de vendas.
+              </p>
+              <button
+                onClick={() => setShowNewLeadModal(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl transition-all"
+              >
+                Criar Primeiro Lead
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedLead && (
@@ -318,7 +255,10 @@ export function LeadsKanban() {
       {showNewLeadModal && (
         <NewLeadModal
           onClose={() => setShowNewLeadModal(false)}
-          onSave={handleNewLead}
+          onSave={() => {
+            setShowNewLeadModal(false);
+            refetch(); // Recarregar dados após criar
+          }}
         />
       )}
     </>
