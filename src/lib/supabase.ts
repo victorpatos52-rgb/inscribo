@@ -1,41 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 🔧 DIAGNÓSTICO DETALHADO
-console.log('🔧 DIAGNÓSTICO SUPABASE:');
-console.log('🔧 import.meta.env:', import.meta.env);
-console.log('🔧 VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
-console.log('🔧 VITE_SUPABASE_ANON_KEY exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
-console.log('🔧 VITE_SUPABASE_ANON_KEY length:', import.meta.env.VITE_SUPABASE_ANON_KEY?.length);
+// Configuração do Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Check if we have proper Supabase configuration
-export const hasSupabaseConfig = !!(
-  import.meta.env.VITE_SUPABASE_URL && 
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
-
-console.log('🔧 hasSupabaseConfig:', hasSupabaseConfig);
-
-// Create client
-export const supabase = hasSupabaseConfig
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
-
-console.log('🔧 Supabase client created:', !!supabase);
-
-if (supabase) {
-  console.log('🔧 Testando conexão com Supabase...');
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      console.error('🔧 Erro na conexão:', error);
-    } else {
-      console.log('🔧 Conexão OK, sessão:', !!data.session);
-    }
-  });
+// Verificar se as variáveis de ambiente estão configuradas
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Variáveis de ambiente do Supabase não encontradas!');
+  console.error('VITE_SUPABASE_URL:', supabaseUrl ? '✅ Configurada' : '❌ Não encontrada');
+  console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Configurada' : '❌ Não encontrada');
+  throw new Error('Configuração do Supabase incompleta. Verifique o arquivo .env');
 }
 
+// Criar cliente Supabase
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
+
+// Verificar conexão
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('❌ Erro na conexão com Supabase:', error);
+  } else {
+    console.log('✅ Conectado ao Supabase!');
+  }
+});
+
+// Tipos TypeScript para o banco de dados
 export type Database = {
   public: {
     Tables: {
@@ -91,8 +86,34 @@ export type Database = {
           current_stage: string | null;
           source: string;
           notes: string | null;
+          birth_date: string | null;
+          address: string | null;
+          city: string | null;
+          state: string | null;
+          zip_code: string | null;
+          parent_phone: string | null;
+          parent_email: string | null;
+          emergency_contact: string | null;
+          emergency_phone: string | null;
+          medical_info: string | null;
+          previous_school: string | null;
+          transfer_reason: string | null;
+          interests: string | null;
+          learning_difficulties: string | null;
+          family_income: string | null;
+          scholarship_interest: boolean | null;
           created_at: string;
           updated_at: string;
+        };
+      };
+      lead_stages: {
+        Row: {
+          id: string;
+          institution_id: string;
+          name: string;
+          color: string;
+          order_index: number;
+          created_at: string;
         };
       };
       visits: {
@@ -110,16 +131,6 @@ export type Database = {
           updated_at: string;
         };
       };
-      lead_stages: {
-        Row: {
-          id: string;
-          institution_id: string;
-          name: string;
-          color: string;
-          order_index: number;
-          created_at: string;
-        };
-      };
       interactions: {
         Row: {
           id: string;
@@ -128,6 +139,17 @@ export type Database = {
           type: 'call' | 'email' | 'whatsapp' | 'visit' | 'note';
           content: string;
           created_at: string;
+        };
+      };
+      stage_changes: {
+        Row: {
+          id: string;
+          lead_id: string;
+          from_stage_id: string | null;
+          to_stage_id: string;
+          changed_by: string;
+          changed_at: string;
+          notes: string | null;
         };
       };
     };
