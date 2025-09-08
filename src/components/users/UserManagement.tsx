@@ -44,25 +44,25 @@ export function UserManagement() {
     }
   };
 
-  // 🔧 CRIAR NOVO USUÁRIO
-  const handleNewUser = async (newUser: Profile) => {
-    try {
-      console.log('✅ Usuário criado com sucesso:', newUser);
-      
-      // Adicionar à lista local
-      setUsers(prev => [{ ...newUser, status: 'active' }, ...prev]);
-      
-      // Mostrar mensagem de sucesso
-      alert('✅ Usuário criado com sucesso!\n\n' +
-            `Nome: ${newUser.full_name}\n` +
-            `Email: ${newUser.email}\n` +
-            `Perfil: ${newUser.role === 'admin' ? 'Administrador' : 'Usuário'}`);
-      
-    } catch (err: any) {
-      console.error('❌ Erro no callback de criação:', err);
-      alert(`❌ Erro: ${err.message}`);
-    }
-  };
+ // 🔧 CRIAR NOVO USUÁRIO NO SUPABASE - SUBSTITUA esta função
+const handleNewUser = async (newUser: Profile) => {
+  try {
+    console.log('✅ Usuário criado com sucesso:', newUser);
+    
+    // Adicionar à lista local
+    setUsers(prev => [{ ...newUser, status: 'active' }, ...prev]);
+    
+    // Mostrar mensagem de sucesso
+    alert('✅ Usuário criado com sucesso!\n\n' +
+          `Nome: ${newUser.full_name}\n` +
+          `Email: ${newUser.email}\n` +
+          `Perfil: ${newUser.role === 'admin' ? 'Administrador' : 'Usuário'}`);
+    
+  } catch (err: any) {
+    console.error('❌ Erro no callback de criação:', err);
+    alert(`❌ Erro: ${err.message}`);
+  }
+};
 
   // 🔧 ATUALIZAR USUÁRIO
   const handleUpdateUser = async (updatedUser: Profile) => {
@@ -125,10 +125,31 @@ export function UserManagement() {
     }
   };
 
-  // Carregar usuários ao montar o componente
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+// 🔧 BUSCAR USUÁRIOS DO SUPABASE - SUBSTITUA esta função
+const fetchUsers = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    console.log('🔍 Buscando usuários...');
+    
+    const data = await profileService.getAll();
+    
+    if (data.length > 0) {
+      console.log('✅ Usuários carregados do Supabase:', data.length);
+      setUsers(data.map(user => ({ ...user, status: 'active' as const })));
+    } else {
+      console.log('⚠️ Nenhum usuário encontrado, usando dados mock');
+      setUsers(mockUsers);
+    }
+    
+  } catch (err: any) {
+    console.error('❌ Erro ao buscar usuários:', err);
+    setError('Erro ao carregar usuários. Usando dados de demonstração.');
+    setUsers(mockUsers);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Filtrar usuários baseado na busca
   const filteredUsers = users.filter(user =>
