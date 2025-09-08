@@ -5,7 +5,7 @@ import { profileService, Profile } from '../../lib/supabase';
 
 interface NewUserModalProps {
   onClose: () => void;
-  onSuccess: (user: Profile) => void;
+  onSuccess: (user: any) => void; // MUDE de onSave para onSuccess
 }
 
 export function NewUserModal({ onClose, onSuccess }: NewUserModalProps) {
@@ -49,27 +49,51 @@ export function NewUserModal({ onClose, onSuccess }: NewUserModalProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      // Validar formulário
-      validateForm();
+  try {
+    // Validar formulário
+    if (!formData.full_name.trim()) throw new Error('Nome completo é obrigatório');
+    if (!formData.email.trim()) throw new Error('E-mail é obrigatório');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) throw new Error('E-mail inválido');
+    if (!formData.password) throw new Error('Senha é obrigatória');
+    if (formData.password.length < 6) throw new Error('A senha deve ter pelo menos 6 caracteres');
+    if (formData.password !== formData.confirmPassword) throw new Error('As senhas não coincidem');
 
-      console.log('📝 Iniciando criação de usuário...', formData.email);
+    console.log('📝 Iniciando criação de usuário...', formData.email);
 
-      // Criar usuário usando o profileService
-      const newUser = await profileService.create({
-        email: formData.email.trim(),
-        password: formData.password,
-        full_name: formData.full_name.trim(),
-        role: formData.role,
-        institution_id: formData.institution_id,
-      });
+    // Criar usuário usando o profileService
+    const newUser = await profileService.create({
+      email: formData.email.trim(),
+      password: formData.password,
+      full_name: formData.full_name.trim(),
+      role: formData.role,
+      institution_id: '00000000-0000-0000-0000-000000000001',
+    });
 
-      console.log('✅ Usuário criado com sucesso:', newUser);
+    console.log('✅ Usuário criado com sucesso:', newUser);
+    onSuccess(newUser);
+    onClose();
+
+  } catch (err: any) {
+    console.error('❌ Erro ao criar usuário:', err);
+    let errorMessage = 'Erro desconhecido ao criar usuário';
+    
+    if (err.message) {
+      errorMessage = err.message;
+      if (err.message.includes('duplicate key')) {
+        errorMessage = 'Este e-mail já está cadastrado no sistema';
+      }
+    }
+    
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
       // Chamar callback de sucesso
       onSuccess(newUser);
