@@ -16,33 +16,6 @@ export function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 🔧 BUSCAR USUÁRIOS DO SUPABASE
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('🔍 Buscando usuários...');
-      
-      const data = await profileService.getAll();
-      
-      if (data.length > 0) {
-        console.log('✅ Usuários carregados do Supabase:', data.length);
-        setUsers(data.map(user => ({ ...user, status: 'active' as const })));
-      } else {
-        console.log('⚠️ Nenhum usuário encontrado, usando dados mock');
-        setUsers(mockData.profiles);
-      }
-      
-    } catch (err: any) {
-      console.error('❌ Erro ao buscar usuários:', err);
-      setError('Erro ao carregar usuários. Usando dados de demonstração.');
-      
-      // Usar dados mock como fallback
-      setUsers(mockData.profiles);
-    } finally {
-      setLoading(false);
-    }
-  };
 
  // 🔧 CRIAR NOVO USUÁRIO NO SUPABASE - SUBSTITUA esta função
 const handleNewUser = async (newUser: Profile) => {
