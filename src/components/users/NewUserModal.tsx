@@ -101,8 +101,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       // Fechar modal
       onClose();
 
-    } catch (err: any) {
-      console.error('❌ Erro ao criar usuário:', err);
+try {
+  // código de criação do usuário
+  onClose();
+} catch (err: any) {
+  console.error('❌ Erro ao criar usuário:', err);
+}
+
       
       // Tratamento de erros específicos
       let errorMessage = 'Erro desconhecido ao criar usuário';
