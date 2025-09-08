@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, UserPlusIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { profileService, Profile } from '../../lib/supabase';
+import { profileService } from '../../lib/supabase';
 
 interface NewUserModalProps {
   onClose: () => void;
