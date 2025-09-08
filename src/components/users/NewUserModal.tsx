@@ -78,22 +78,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     onSuccess(newUser);
     onClose();
 
-  } catch (err: any) {
-    console.error('❌ Erro ao criar usuário:', err);
-    let errorMessage = 'Erro desconhecido ao criar usuário';
-    
-    if (err.message) {
-      errorMessage = err.message;
-      if (err.message.includes('duplicate key')) {
-        errorMessage = 'Este e-mail já está cadastrado no sistema';
-      }
-    }
-    
-    setError(errorMessage);
-} finally {
-  setLoading(false);
-}
-};
 
       // Chamar callback de sucesso
       onSuccess(newUser);
@@ -112,26 +96,36 @@ try {
       // Tratamento de erros específicos
       let errorMessage = 'Erro desconhecido ao criar usuário';
       
-      if (err.message) {
+const handleCreateUser = async () => {
+  setLoading(true);
+  try {
+    // código para criar usuário no Supabase
+    await criarUsuario();
+    onClose();
+  } catch (err: any) {
+    console.error('❌ Erro ao criar usuário:', err);
+    let errorMessage = 'Erro desconhecido ao criar usuário';
+
+    if (err.message) {
+      if (err.message.includes('duplicate key')) {
+        errorMessage = 'Este e-mail já está cadastrado no sistema';
+      } else if (err.message.includes('invalid email')) {
+        errorMessage = 'E-mail inválido';
+      } else if (err.message.includes('password')) {
+        errorMessage = 'Erro na senha. Verifique se atende aos requisitos';
+      } else if (err.message.includes('network') || err.message.includes('fetch')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente';
+      } else {
         errorMessage = err.message;
       }
-      
-      // Erros comuns do Supabase
-      if (err.message?.includes('duplicate key')) {
-        errorMessage = 'Este e-mail já está cadastrado no sistema';
-      } else if (err.message?.includes('invalid email')) {
-        errorMessage = 'E-mail inválido';
-      } else if (err.message?.includes('password')) {
-        errorMessage = 'Erro na senha. Verifique se atende aos requisitos';
-      } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
-        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente';
-      }
+    }
 
-      setError(errorMessage);
-} finally {
-  setLoading(false);
-} 
-  };
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
