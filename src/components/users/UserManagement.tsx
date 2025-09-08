@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, UserIcon, ShieldCheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
-import { profileService, Profile, mockData } from '../../lib/supabase';
+import { profileService } from '../../lib/supabase';
 import { UserModal } from './UserModal';
 import { NewUserModal } from './NewUserModal';
 
