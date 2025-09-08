@@ -90,9 +90,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
     
     setError(errorMessage);
-  } finally {
-    setLoading(false);
-  }
+} finally {
+  setLoading(false);
+}
 };
 
       // Chamar callback de sucesso
@@ -128,9 +128,9 @@ try {
       }
 
       setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+} finally {
+  setLoading(false);
+} 
   };
 
   const handleChange = (field: string, value: string) => {
