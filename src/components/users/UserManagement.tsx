@@ -19,17 +19,31 @@ export default function UserManagement() {
   }, []);
 
   const fetchUsers = async () => {
+  try {
     setLoading(true);
     setError(null);
-    try {
-      // 🔹 Aqui ainda é mock — substituir por fetch do Supabase depois
+    console.log('🔍 Buscando usuários...');
+    
+    const data = await profileService.getAll();
+    
+    if (data && data.length > 0) {
+      console.log('✅ Usuários carregados do Supabase:', data.length);
+      setUsers(data.map(user => ({ ...user, status: 'active' as const })));
+    } else {
+      console.log('⚠️ Nenhum usuário encontrado, usando dados mock');
+      // Use os dados mock que já existem no seu arquivo
       setUsers(mockUsers);
-    } catch (err) {
-      setError("Erro ao carregar usuários");
-    } finally {
-      setLoading(false);
     }
-  };
+    
+  } catch (err: any) {
+    console.error('❌ Erro ao buscar usuários:', err);
+    setError('Erro ao carregar usuários. Usando dados de demonstração.');
+    // Use os dados mock que já existem no seu arquivo
+    setUsers(mockUsers);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleNewUser = async (newUser: {
     email: string;
