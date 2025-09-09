@@ -28,16 +28,15 @@ interface Stage {
   order_index: number;
 }
 
-// Serviço para leads
 const leadService = {
   async getAll(): Promise<Lead[]> {
     if (!supabase) {
-      console.warn('⚠️ Supabase não configurado - usando dados mock');
+      console.warn('Supabase nao configurado - usando dados mock');
       return mockLeads;
     }
 
     try {
-      console.log('🔍 Buscando leads do Supabase...');
+      console.log('Buscando leads do Supabase...');
       
       const { data, error } = await supabase
         .from('leads')
@@ -45,26 +44,26 @@ const leadService = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar leads:', error);
+        console.error('Erro ao buscar leads:', error);
         throw error;
       }
 
-      console.log('✅ Leads encontrados:', data?.length || 0);
+      console.log('Leads encontrados:', data?.length || 0);
       return data || [];
     } catch (error) {
-      console.error('💥 Erro ao buscar leads:', error);
+      console.error('Erro ao buscar leads:', error);
       throw error;
     }
   },
 
   async update(id: string, updates: Partial<Lead>): Promise<Lead> {
     if (!supabase) {
-      console.warn('⚠️ Supabase não configurado - atualizando lead localmente');
+      console.warn('Supabase nao configurado - atualizando lead localmente');
       return { ...updates, id, updated_at: new Date().toISOString() } as Lead;
     }
 
     try {
-      console.log('📝 Atualizando lead no Supabase...', id);
+      console.log('Atualizando lead no Supabase...', id);
       
       const { data, error } = await supabase
         .from('leads')
@@ -74,20 +73,19 @@ const leadService = {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao atualizar lead:', error);
+        console.error('Erro ao atualizar lead:', error);
         throw error;
       }
 
-      console.log('✅ Lead atualizado:', data);
+      console.log('Lead atualizado:', data);
       return data;
     } catch (error) {
-      console.error('💥 Erro ao atualizar lead:', error);
+      console.error('Erro ao atualizar lead:', error);
       throw error;
     }
   }
 };
 
-// Dados mock para fallback
 const mockLeads: Lead[] = [
   {
     id: '1',
@@ -96,7 +94,7 @@ const mockLeads: Lead[] = [
     email: 'maria@email.com',
     phone: '(11) 99999-9999',
     grade_level: '1º EM',
-    course_interest: 'Ensino Médio',
+    course_interest: 'Ensino Medio',
     current_stage: '1',
     notes: 'Interessada em conhecer a escola.',
     source: 'website',
@@ -113,7 +111,7 @@ const mockLeads: Lead[] = [
     grade_level: '6º ano',
     course_interest: 'Ensino Fundamental',
     current_stage: '2',
-    notes: 'Já fez contato inicial.',
+    notes: 'Ja fez contato inicial.',
     source: 'indicacao',
     assigned_to: 'Maria Costa',
     created_at: new Date(Date.now() - 86400000).toISOString(),
@@ -128,7 +126,7 @@ export function LeadsKanban() {
     { id: '3', name: 'Agendado', color: '#F59E0B', order_index: 3 },
     { id: '4', name: 'Visita', color: '#EC4899', order_index: 4 },
     { id: '5', name: 'Proposta', color: '#EF4444', order_index: 5 },
-    { id: '6', name: 'Matrícula', color: '#10B981', order_index: 6 },
+    { id: '6', name: 'Matricula', color: '#10B981', order_index: 6 },
   ]);
   
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -137,7 +135,6 @@ export function LeadsKanban() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Buscar leads
   const fetchLeads = async () => {
     try {
       setLoading(true);
@@ -147,8 +144,8 @@ export function LeadsKanban() {
       setLeads(data);
 
     } catch (err: any) {
-      console.error('❌ Erro ao buscar leads:', err);
-      setError('Erro ao carregar leads. Usando dados de demonstração.');
+      console.error('Erro ao buscar leads:', err);
+      setError('Erro ao carregar leads. Usando dados de demonstracao.');
       setLeads(mockLeads);
     } finally {
       setLoading(false);
@@ -159,7 +156,6 @@ export function LeadsKanban() {
     fetchLeads();
   }, []);
 
-  // Mover lead entre estágios
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
 
@@ -177,7 +173,7 @@ export function LeadsKanban() {
     try {
       await leadService.update(leadId, { current_stage: newStageId });
     } catch (err: any) {
-      console.error('❌ Erro ao mover lead:', err);
+      console.error('Erro ao mover lead:', err);
       setLeads(prevLeads =>
         prevLeads.map(lead =>
           lead.id === leadId
@@ -242,7 +238,7 @@ export function LeadsKanban() {
               Funil de Leads
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Gerencie seus leads através do funil de vendas
+              Gerencie seus leads atraves do funil de vendas
             </p>
           </div>
           <button
