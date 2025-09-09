@@ -12,6 +12,12 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* Adicione estas duas linhas abaixo */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
