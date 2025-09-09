@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import NewUserModal from "@/components/users/NewUserModal";
 import { Profile } from "@/types/profile";
-import { profileService } from "@/services/profileService"; // Importação adicionada
+import { profileService } from "@/profileService"; // Importação adicionada
 
 // 🔹 Mock temporário para evitar erro de referência
 const mockUsers: Profile[] = [];
