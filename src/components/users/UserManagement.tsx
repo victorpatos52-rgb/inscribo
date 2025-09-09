@@ -1,7 +1,9 @@
+// UserManagement.tsx corrigido
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import NewUserModal from "@/components/users/NewUserModal";
 import { Profile } from "@/types/profile";
+import { profileService } from "@/services/profileService"; // Importação adicionada
 
 // 🔹 Mock temporário para evitar erro de referência
 const mockUsers: Profile[] = [];
@@ -19,31 +21,31 @@ export default function UserManagement() {
   }, []);
 
   const fetchUsers = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    console.log('🔍 Buscando usuários...');
-    
-    const data = await profileService.getAll();
-    
-    if (data && data.length > 0) {
-      console.log('✅ Usuários carregados do Supabase:', data.length);
-      setUsers(data.map(user => ({ ...user, status: 'active' as const })));
-    } else {
-      console.log('⚠️ Nenhum usuário encontrado, usando dados mock');
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔍 Buscando usuários...');
+      
+      const data = await profileService.getAll();
+      
+      if (data && data.length > 0) {
+        console.log('✅ Usuários carregados do Supabase:', data.length);
+        setUsers(data.map(user => ({ ...user, status: 'active' as const })));
+      } else {
+        console.log('⚠️ Nenhum usuário encontrado, usando dados mock');
+        // Use os dados mock que já existem no seu arquivo
+        setUsers(mockUsers);
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Erro ao buscar usuários:', err);
+      setError('Erro ao carregar usuários. Usando dados de demonstração.');
       // Use os dados mock que já existem no seu arquivo
       setUsers(mockUsers);
+    } finally {
+      setLoading(false);
     }
-    
-  } catch (err: any) {
-    console.error('❌ Erro ao buscar usuários:', err);
-    setError('Erro ao carregar usuários. Usando dados de demonstração.');
-    // Use os dados mock que já existem no seu arquivo
-    setUsers(mockUsers);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleNewUser = async (newUser: {
     email: string;
@@ -53,9 +55,9 @@ export default function UserManagement() {
     try {
       // 🔹 Implementar chamada real ao Supabase:
       // const { data, error } = await supabase.auth.admin.createUser({
-      //   email: newUser.email,
-      //   password: newUser.password,
-      //   user_metadata: { role: newUser.role }
+      //    email: newUser.email,
+      //    password: newUser.password,
+      //    user_metadata: { role: newUser.role }
       // });
 
       const createdUser: Profile = {
