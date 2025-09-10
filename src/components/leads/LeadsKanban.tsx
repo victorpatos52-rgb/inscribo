@@ -1,4 +1,3 @@
-// src/components/leads/LeadsKanban.tsx
 import React from 'react';
 
 export function LeadsKanban() {
