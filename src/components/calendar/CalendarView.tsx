@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { PlusIcon, EyeIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { NewVisitModal } from './NewVisitModal';
 import { VisitModal } from './VisitModal';
+import { useVisits, Visit } from '../../hooks/useVisits';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = {
@@ -19,20 +20,6 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-interface Visit {
-  id: string;
-  title: string;
-  description: string | null;
-  scheduled_date: string;
-  duration_minutes: number;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
-  lead_id: string;
-  lead_name: string;
-  lead_phone: string;
-  lead_email: string;
-  notes: string | null;
-}
-
 interface CalendarEvent {
   id: string;
   title: string;
@@ -42,54 +29,11 @@ interface CalendarEvent {
 }
 
 export function CalendarView() {
-  const mockVisits: Visit[] = [
-    {
-      id: '1',
-      title: 'Visita - Ana Silva',
-      description: 'Conhecer as instalações da escola e projeto pedagógico',
-      scheduled_date: new Date(Date.now() + 86400000).toISOString(),
-      duration_minutes: 60,
-      status: 'scheduled',
-      lead_id: '1',
-      lead_name: 'Ana Silva',
-      lead_phone: '(11) 99999-9999',
-      lead_email: 'maria@email.com',
-      notes: 'Interessada em ensino médio',
-    },
-    {
-      id: '2',
-      title: 'Visita - João Santos',
-      description: 'Apresentação do projeto pedagógico e laboratórios',
-      scheduled_date: new Date(Date.now() + 172800000).toISOString(),
-      duration_minutes: 90,
-      status: 'scheduled',
-      lead_id: '2',
-      lead_name: 'João Santos',
-      lead_phone: '(11) 88888-8888',
-      lead_email: 'pedro@email.com',
-      notes: 'Interessado em atividades extracurriculares',
-    },
-    {
-      id: '3',
-      title: 'Visita - Carla Oliveira',
-      description: 'Visita realizada com sucesso',
-      scheduled_date: new Date(Date.now() - 86400000).toISOString(),
-      duration_minutes: 75,
-      status: 'completed',
-      lead_id: '3',
-      lead_name: 'Carla Oliveira',
-      lead_phone: '(11) 77777-7777',
-      lead_email: 'ana@email.com',
-      notes: 'Visita concluída, muito interessada',
-    },
-  ];
-  
-  const [visits, setVisits] = useState<Visit[]>(mockVisits);
+  const { visits, loading, error, createVisit, updateVisit } = useVisits();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [showNewVisitModal, setShowNewVisitModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const calendarEvents = visits.map((visit) => {
@@ -117,18 +61,22 @@ export function CalendarView() {
     setSelectedVisit(event.resource);
   };
 
-  const handleNewVisit = (newVisit: Omit<Visit, 'id'>) => {
-    const visit: Visit = {
-      ...newVisit,
-      id: Date.now().toString(),
-    };
-    setVisits(prev => [...prev, visit]);
+  const handleNewVisit = async (newVisitData: Omit<Visit, 'id' | 'created_at' | 'updated_at' | 'institution_id' | 'lead_name' | 'lead_phone' | 'lead_email'>) => {
+    try {
+      await createVisit(newVisitData);
+    } catch (error) {
+      console.error('Erro ao criar visita:', error);
+      alert('Erro ao agendar visita. Tente novamente.');
+    }
   };
 
-  const handleUpdateVisit = (updatedVisit: Visit) => {
-    setVisits(prev => prev.map(visit => 
-      visit.id === updatedVisit.id ? updatedVisit : visit
-    ));
+  const handleUpdateVisit = async (updatedVisit: Visit) => {
+    try {
+      await updateVisit(updatedVisit.id, updatedVisit);
+    } catch (error) {
+      console.error('Erro ao atualizar visita:', error);
+      alert('Erro ao atualizar visita. Tente novamente.');
+    }
   };
 
   const eventStyleGetter = (event: CalendarEvent) => {
@@ -184,6 +132,16 @@ export function CalendarView() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl">
+          Erro ao carregar visitas: {error}
+        </div>
       </div>
     );
   }
